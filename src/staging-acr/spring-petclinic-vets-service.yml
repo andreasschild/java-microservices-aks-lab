@@ -2,21 +2,23 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: admin-server
-  name: admin-server
+    app: vets-service
+  name: vets-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: admin-server
+      app: vets-service
   template:
     metadata:
       labels:
-        app: admin-server
+        app: vets-service
+        azure.workload.identity/use: "true"
     spec:
+      serviceAccountName: workload-identity-sa
       containers:
-      - image: acrpetclinic5aeb59.azurecr.io/spring-petclinic-admin-server:3.0.2
-        name: admin-server
+      - image: acrpetclinic5aeb59.azurecr.io/spring-petclinic-vets-service:3.0.2
+        name: vets-service
         env:
         - name: "CONFIG_SERVER_URL"
           valueFrom:
@@ -32,7 +34,7 @@ spec:
           value: >-
             {
                 "role": {   
-                    "name": "admin-server"
+                    "name": "vets-service"
                   }
             }
         imagePullPolicy: Always
@@ -71,15 +73,13 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: admin-server
-  name: admin-server
-  annotations:
-    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    app: vets-service
+  name: vets-service
 spec:
   ports:
   - port: 8080
     protocol: TCP
     targetPort: 8080
   selector:
-    app: admin-server
-  type: LoadBalancer
+    app: vets-service
+  type: ClusterIP
